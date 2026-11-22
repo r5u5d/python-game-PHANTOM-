@@ -75,7 +75,7 @@ def title_screen():
         screen.blit(text, (400 - text.get_width() // 2, 300 - text.get_height() // 2))
         pygame.display.flip()
 
-running = title_screen()
+title_screen()
 def draw_tutorial():
     show_tutorial = True
     while show_tutorial == True:
@@ -122,7 +122,9 @@ while running == True:
     screen.blit(image, (player_x, player_y))
     total_velocity = abs(velocity[0]) + abs(velocity[1])
     if step != 1 or show_tutorial == False:
-        check_velocity(slow_Since,total_velocity)
+        game_over, slow_Since = check_velocity(slow_Since, total_velocity)
+        if game_over == True:
+            pygame.quit()
     player_rect = image.get_rect(topleft=(player_x, player_y))
     
     if show_tutorial:
@@ -145,12 +147,13 @@ while running == True:
                     screen.blit(text, (400 - text.get_width() // 2, 10))
                     if elapsed_time > 10:
                         pygame.quit()
-            else:
-                Fast = True
-                while Fast == True:
-                    elapsed_time = (pygame.time.get_ticks() - timer_started) / 1000
-                if elapsed_time > 5:
-                    step = 3
+                else:
+                    Fast = True
+                    while Fast == True:
+                        elapsed_time = (pygame.time.get_ticks() - timer_started) / 1000
+                    if elapsed_time > 5:
+                        step = 3
+                        Fast = False
     pygame.display.flip()  
     clock.tick(60)
 pygame.quit()
