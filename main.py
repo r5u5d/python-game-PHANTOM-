@@ -116,12 +116,11 @@ def check_velocity(slow_Since, total_velocity):
 
 
 def update_coins(coin_image,now,player_rect,score,spawn_coin):
-    
     if now >= spawn_coin:
         coin_x = random.randint(0,800- coin_image.get_width())
         coin_y = random.randint(0,600- coin_image.get_height())
         coins.append(coin_image.get_rect(topleft=(coin_x,coin_y)))
-        spawn_coin = now + random.randint(5000,10000)
+        spawn_coin = now + random.randint(1000,2000)
     for i in coins[:]:
         if player_rect.colliderect(i):
             coins.remove(i)
