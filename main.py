@@ -90,21 +90,18 @@ def draw_tutorial():
         text = font.render("Press w,a,s,d or arrow keys to move", True, (0, 0, 0))
         screen.blit(text, (400 - text.get_width() // 2, 300 - text.get_height() // 2))
         pygame.display.flip()
-
-
-
 while running == True:
+
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             running = False
         elif event.type == pygame.KEYDOWN:
             if event.key == pygame.K_ESCAPE:
                 running = False
+    screen.fill((135, 206, 235))                                          # order was wrong it has to be fill blit then everything else in then flip thentick 
     player_x , player_y, velocity = movement(player_x, player_y, velocity)     
     screen.blit(image, (player_x, player_y))
-    pygame.display.flip()  
-    screen.fill((135, 206, 235))
-    clock.tick(60)
+    
     player_rect = image.get_rect(topleft=(player_x, player_y))
     if velocity[0] + velocity[1] < 20:
         pass
@@ -116,10 +113,8 @@ while running == True:
         screen.blit(text, (400 - text.get_width() // 2, 40))
         if player_rect.colliderect(goal_rect):
                 step += 1
-        
-
-            
-    screen.fill((135, 206, 235))
+  
+    pygame.display.flip()  
     clock.tick(60)
 pygame.quit()
 
