@@ -16,15 +16,21 @@ different_blocks = ["yellow_body_square.png", "blue_body_square.png", "green_bod
 image = pygame.image.load(f"kenney_shape-characters/PNG/Default/{different_blocks[number]}")
 tutorial_steps = ["Press w,a,s,d or arrow keys to move move in the red box!", "oh ya! you cant go slow", "dodge the obstacles good luck!"]
 step = 1
-assets = pygame.image.load("kenney_shape-characters/PNG/Default/yellow_body_square.png")
+coin_image = pygame.image.load("kenney_shape-characters/PNG/Default/tile_coin.png")
+slow_Since = None
+Fast = None
 font = pygame.font.Font(None, 36)
 player_x = 100
 player_y = 100
 velocity = [0,0]
 speed = 0.2
 goal_rect = pygame.Rect(600, 400, 60, 60)
-show_tutorial = True
+show_tutorial = False
 running = True
+score = 0
+coins = []
+spawn_coin = 0
+now = pygame.time.get_ticks()
 def movement(player_x, player_y, velocity):
     key = pygame.key.get_pressed()
     if key[pygame.K_UP] or key[pygame.K_w]:
@@ -74,7 +80,7 @@ def title_screen():
         screen.blit(text, (400 - text.get_width() // 2, 300 - text.get_height() // 2))
         pygame.display.flip()
 
-title_screen()
+
 def draw_tutorial():
     show_tutorial = True
     while show_tutorial == True:
@@ -93,8 +99,7 @@ def draw_tutorial():
         screen.blit(text, (400 - text.get_width() // 2, 300 - text.get_height() // 2))
         pygame.display.flip()
 
-slow_Since = None
-Fast = None
+
 def check_velocity(slow_Since, total_velocity):
     now = pygame.time.get_ticks()               
     if total_velocity < 15:
@@ -108,8 +113,38 @@ def check_velocity(slow_Since, total_velocity):
     else:
         slow_Since = None
     return False, slow_Since  
-def obstacles():
-    pass                  
+
+
+def update_coins(coin_image,now,player_rect,score,spawn_coin):
+    
+    if now >= spawn_coin:
+        coin_x = random.randint(0,800- coin_image.get_width())
+        coin_y = random.randint(0,600- coin_image.get_height())
+        coins.append(coin_image.get_rect(topleft=(coin_x,coin_y)))
+        spawn_coin = now + random.randint(1000,2000)
+    for i in coins[:]:
+        if player_rect.colliderect(i):
+            coins.remove(i)
+            score += 1
+    return spawn_coin, score
+
+def draw_coins(coins, score):
+    for c in coins:
+        screen.blit(coin_image, c)
+    screen.blit(font.render(f'you have{score} coins!',True,(0,0,0)),(200,100))   #lowk idk why i did this couldve just done score_text then blit that but whatever
+
+
+class projectile():
+    def __init__(self,x,y,speed):
+        self.image = pygame.image.load("kenney_shape-characters/PNG/Default/red_body_circle.png")
+        self.rect = self.image.get_rect(center=(x,y))
+        self.speed = speed
+    def update(self):
+        self.image.x += speed
+    def draw(self):
+        screen.blit(self.image,self.rect)
+   
+running = title_screen()
 while running == True:
 
     for event in pygame.event.get():
@@ -122,7 +157,7 @@ while running == True:
     player_x , player_y, velocity = movement(player_x, player_y, velocity)     
     screen.blit(image, (player_x, player_y))
     total_velocity = abs(velocity[0]) + abs(velocity[1])
-    now_2 = pygame.time.get_ticks()
+   
     if step != 1 or not show_tutorial :
         game_over, slow_Since = check_velocity(slow_Since, total_velocity)
         if game_over == True:
@@ -142,7 +177,7 @@ while running == True:
             if total_velocity > 15:
                 if Fast == None:
                     Fast = pygame.time.get_ticks()
-                elapsed_time =  now_2 - Fast
+                elapsed_time =  now - Fast
                 if elapsed_time > 3000:
                     step = 3
             else:
@@ -152,6 +187,9 @@ while running == True:
             text = font.render(tutorial_steps[step-1],True,(0,0,0))
             screen.blit(text, (400 - text.get_width() // 2, 40))
 
+    if not show_tutorial:
+        spawn_coin,score = update_coins(coin_image,now,player_rect,score,spawn_coin)
+        draw_coins(coins, score)
 
     pygame.display.flip()  
     clock.tick(60)
