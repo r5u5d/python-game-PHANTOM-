@@ -15,7 +15,7 @@ number = random.randint(0, 4)
 different_blocks = ["yellow_body_square.png", "blue_body_square.png", "green_body_square.png", "red_body_square.png", 
                     "purple_body_square.png"]
 image = pygame.image.load(f"kenney_shape-characters/PNG/Default/{different_blocks[number]}")
-tutorial_steps = ["Press w,a,s,d or arrow keys to move move in the red box!", "stop! you cant go slow", "dodge the obstacles good luck!"]
+tutorial_steps = ["Press w,a,s,d or arrow keys to move move in the red box!", "oh ya! you cant go slow", "dodge the obstacles good luck!"]
 step = 1
 assets = pygame.image.load("kenney_shape-characters/PNG/Default/yellow_body_square.png")
 font = pygame.font.Font(None, 36)
@@ -24,7 +24,7 @@ player_y = 100
 velocity = [0,0]
 speed = 0.2
 goal_rect = pygame.Rect(600, 400, 60, 60)
-show_tutorial = True
+show_tutorial = False
 running = True
 def movement(player_x, player_y, velocity):
     key = pygame.key.get_pressed()
@@ -93,6 +93,22 @@ def draw_tutorial():
         text = font.render("Press w,a,s,d or arrow keys to move", True, (0, 0, 0))
         screen.blit(text, (400 - text.get_width() // 2, 300 - text.get_height() // 2))
         pygame.display.flip()
+
+slow_Since = None
+
+def check_velocity(slow_Since, total_velocity):
+    now = pygame.time.get_ticks()               
+    if total_velocity < 15:
+        if slow_Since is None:
+            slow_Since = now                       
+        text = font.render("You are going too slow!", True, (0, 0, 0))
+        screen.blit(text, (400 - text.get_width() // 2, 10))
+        elapsed_time = (now - slow_Since) / 1000   
+        if elapsed_time > 10:
+            return True, slow_Since
+    else:
+        slow_Since = None
+    return False, slow_Since                      
 while running == True:
 
     for event in pygame.event.get():
@@ -104,13 +120,9 @@ while running == True:
     screen.fill((135, 206, 235))                                          # order was wrong it has to be fill blit then everything else in then flip thentick 
     player_x , player_y, velocity = movement(player_x, player_y, velocity)     
     screen.blit(image, (player_x, player_y))
-    if (velocity[0] * velocity[1] < 10 and velocity[0] * velocity[1] > 0) or (velocity[0] * velocity[1] > -10 and velocity[0] * velocity[1] < 0):
-        text = font.render("You are going too slow!", True, (0, 0, 0))
-        screen.blit(text, (400 - text.get_width() // 2, 10))
-        start_ticks = pygame.time.get_ticks()
-        if pygame.time.get_ticks() > 10000:
-            pygame.quit()
-    
+    total_velocity = abs(velocity[0]) + abs(velocity[1])
+    if step != 1 or show_tutorial == False:
+        check_velocity(slow_Since,total_velocity)
     player_rect = image.get_rect(topleft=(player_x, player_y))
     
     if show_tutorial:
@@ -120,9 +132,25 @@ while running == True:
         screen.blit(text, (400 - text.get_width() // 2, 40))
         if player_rect.colliderect(goal_rect):
             step = 2
-            text = font.render(tutorial_steps[step - 1], True, (0, 0, 0))
-            screen.blit(text, (400 - text.get_width() // 2, 40))
-  
+            if step == 2:
+                Fast = False
+                text = font.render(tutorial_steps[step - 1], True, (0, 0, 0))
+                screen.blit(text, (400 - text.get_width() // 2, 40))
+                timer_started = pygame.time.get_ticks()
+                if (total_velocity < 100 and step == 2):                 
+                    Fast = False
+                    start_ticks = pygame.time.get_ticks()
+                    elapsed_time = (pygame.time.get_ticks() - start_ticks) / 1000
+                    text = font.render("You are going too slow!", True, (0, 0, 0))
+                    screen.blit(text, (400 - text.get_width() // 2, 10))
+                    if elapsed_time > 10:
+                        pygame.quit()
+            else:
+                Fast = True
+                while Fast == True:
+                    elapsed_time = (pygame.time.get_ticks() - timer_started) / 1000
+                if elapsed_time > 5:
+                    step = 3
     pygame.display.flip()  
     clock.tick(60)
 pygame.quit()
