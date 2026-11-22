@@ -1,7 +1,10 @@
 #game premise: a game where u dodge obsticles
+
+#THING TO FIX!!
+#the velocity check thing doesnt work, it closes after 10seconds instead of when u go slow
+# finish the tutorial
+#add a obstacle that shoots pasts the screen and if u touch it u die
 print("hello, world")
-
-
 import pygame
 pygame.init()
 screen = pygame.display.set_mode((800, 600))
@@ -13,7 +16,7 @@ different_blocks = ["yellow_body_square.png", "blue_body_square.png", "green_bod
                     "purple_body_square.png"]
 image = pygame.image.load(f"kenney_shape-characters/PNG/Default/{different_blocks[number]}")
 tutorial_steps = ["Press w,a,s,d or arrow keys to move move in the red box!", "stop! you cant go slow", "dodge the obstacles good luck!"]
-step = 0
+step = 1
 assets = pygame.image.load("kenney_shape-characters/PNG/Default/yellow_body_square.png")
 font = pygame.font.Font(None, 36)
 player_x = 100
@@ -101,18 +104,24 @@ while running == True:
     screen.fill((135, 206, 235))                                          # order was wrong it has to be fill blit then everything else in then flip thentick 
     player_x , player_y, velocity = movement(player_x, player_y, velocity)     
     screen.blit(image, (player_x, player_y))
+    if (velocity[0] * velocity[1] < 10 and velocity[0] * velocity[1] > 0) or (velocity[0] * velocity[1] > -10 and velocity[0] * velocity[1] < 0):
+        text = font.render("You are going too slow!", True, (0, 0, 0))
+        screen.blit(text, (400 - text.get_width() // 2, 10))
+        start_ticks = pygame.time.get_ticks()
+        if pygame.time.get_ticks() > 10000:
+            pygame.quit()
     
     player_rect = image.get_rect(topleft=(player_x, player_y))
-    if velocity[0] + velocity[1] < 20:
-        pass
     
     if show_tutorial:
         if step == 1:
             pygame.draw.rect(screen, (220, 50, 50), goal_rect)
-        text = font.render(tutorial_steps[step], True, (0, 0, 0))
+        text = font.render(tutorial_steps[step - 1], True, (0, 0, 0))
         screen.blit(text, (400 - text.get_width() // 2, 40))
         if player_rect.colliderect(goal_rect):
-                step += 1
+            step = 2
+            text = font.render(tutorial_steps[step - 1], True, (0, 0, 0))
+            screen.blit(text, (400 - text.get_width() // 2, 40))
   
     pygame.display.flip()  
     clock.tick(60)
