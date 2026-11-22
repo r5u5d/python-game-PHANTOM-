@@ -5,8 +5,17 @@ import pygame
 pygame.init()
 screen = pygame.display.set_mode((800, 600))
 pygame.display.set_caption("My Game")
-clock = pygame.time.Clock
-image = pygame.image.load("kenny_shape-characters/")
+clock = pygame.time.Clock()
+import random
+number = random.randint(0, 5)
+different_blocks = ["yellow_body_square.png", "blue_body_square.png", "green_body_square.png", "red_body_square.png", 
+                    "purple_body_square.png", "orange_body_square.png"]
+image = pygame.image.load(f"kenney_shape-characters/PNG/Default/{different_blocks[0]}")
+image.blit(image, (100, 100))
+
+
+
+
 running = True
 while running == True:
     for event in pygame.event.get():
