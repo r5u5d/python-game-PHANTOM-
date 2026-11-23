@@ -1,6 +1,12 @@
 #game premise: a game where u dodge obsticles
-#THING TO FIX!!
-
+#THING TO FIX!!#
+#music for title screen and game start sound effects
+#better title screen
+#make faces on blocks
+#give a death screen 
+#make game harder over time 
+#make a indicator warning on side on
+count_down = 0
 
 print("hello, world")
 import pygame
@@ -13,10 +19,14 @@ number = random.randint(0, 4)
 different_blocks = ["yellow_body_square.png", "blue_body_square.png", "green_body_square.png", "red_body_square.png", 
                     "purple_body_square.png"]
 image = pygame.image.load(f"kenney_shape-characters/PNG/Default/{different_blocks[number]}")
-tutorial_steps = ["Press w,a,s,d or arrow keys to move move in the red box!", "oh ya! you cant go slow", "dodge the obstacles good luck!"]
+tutorial_steps = ["Press w,a,s,d or arrow keys to move move in the red box!", "oh ya! you cant go slow, Stay fast for {} seconds", "dodge the obstacles good luck!"]
 step = 1
 coin_image = pygame.image.load("kenney_shape-characters/PNG/Default/tile_coin.png")
+countdown_sound = pygame.mixer.Sound("lesiakower-countdown-sound-effect-8-bit-151797.mp3")
 projectile_image = pygame.image.load("kenney_shape-characters/PNG/Default/red_body_circle.png")
+coin_pickup_sound = pygame.mixer.Sound("coin.wav")
+bg_sound = pygame.mixer.Sound("freesound_community-8-bit-heaven-26287.mp3")
+bg_sound.play(-1)
 slow_Since = None
 Fast = None
 font = pygame.font.Font(None, 36)
@@ -28,7 +38,7 @@ goal_rect = pygame.Rect(600, 400, 60, 60)
 show_tutorial = True
 running = True
 score = 0
-p_speed = 2
+p_speed = 5
 spawn_projectile = 0
 p_x = 100
 p_y = 100
@@ -36,6 +46,8 @@ projectiles = []
 coins = []
 spawn_coin = 0
 tutorial_timer =0
+time_survived = 0
+
 now = pygame.time.get_ticks()
 def movement(player_x, player_y, velocity):
     key = pygame.key.get_pressed()
@@ -131,12 +143,14 @@ def update_coins(coin_image,now,player_rect,score,spawn_coin):
         if player_rect.colliderect(i):
             coins.remove(i)
             score += 1
+            coin_pickup_sound.play()
     return spawn_coin, score
 
 def draw_coins(coins, score):
     for c in coins:
         screen.blit(coin_image, c)
-    screen.blit(font.render(f'you have{score} coins!',True,(0,0,0)),(200,100))   #lowk idk why i did this couldve just done score_text then blit that but whatever
+    screen.blit(coin_image,(750,555))
+    screen.blit(font.render(f'you have {score}x         coins!',True,(0,0,0)),(650,530))   #lowk idk why i did this couldve just done score_text then blit that but whatever
 
 class projectile():
     def __init__(self,p_x,p_y,p_speed):
@@ -144,17 +158,21 @@ class projectile():
         p_y = random.randint(0,600)
         p_x = 0
         self.rect = self.image.get_rect(center=(p_x,p_y))
-        self.speed = p_speed
+        self.speed = p_speed 
     def update(self):
-        self.rect.x += p_speed
+        self.rect.x += p_speed + random.randint(0,4)
     def draw(self):
         screen.blit(self.image,self.rect)
     def collision(self,player_rect):
         if self.rect.colliderect(player_rect):
             pygame.quit()
-   
+def survival_timer():
+    text = font.render(f"You have survived for {time_survived//60} seconds", True, (0, 0, 0))
+    screen.blit(text, (400 - text.get_width() // 2, 500))
+    
 running = title_screen()
 while running == True:
+    
     now = pygame.time.get_ticks()
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
@@ -168,7 +186,7 @@ while running == True:
     total_velocity = abs(velocity[0]) + abs(velocity[1])
     
 
-    if step != 1 or not show_tutorial:
+    if step != 1 and step != 3:
         game_over, slow_Since = check_velocity(slow_Since, total_velocity)
         if game_over == True:
             running = False
@@ -182,28 +200,31 @@ while running == True:
             if player_rect.colliderect(goal_rect):
                 step = 2
         elif step == 2:
-            text = font.render(tutorial_steps[step - 1], True, (0, 0, 0))
+            remaining = max(0, 3 - count_down)
+            message = tutorial_steps[1].format(f"{remaining:.1f}")
+            text = font.render(message, True, (0, 0, 0))
             screen.blit(text, (400 - text.get_width() // 2, 40))
-            if total_velocity > 15:
-                if Fast == None:
-                    Fast = pygame.time.get_ticks()
-                elapsed_time =  now - Fast
-                if elapsed_time > 3000:
+            if slow_Since == None:
+                count_down += 1/60
+                if round(count_down) == 3:
                     step = 3
             else:
-                Fast = None
+                count_down = 0
+                
 
         elif step == 3:
             if tutorial_timer == 0:
+                countdown_sound.play()
                 text = font.render(tutorial_steps[step-1],True,(0,0,0))
                 screen.blit(text, (400 - text.get_width() // 2, 40))
                 player_x = 400
                 player_y = 300
-                tutorial_timer = now + 3000
-            text = font.render("okay watch out better dodge!",True,(0,0,0))
+                tutorial_timer = now + 3100
+            text = font.render("okay watch out better dodge! the game is starting!",True,(0,0,0))
             screen.blit(text, (400 - text.get_width() // 2, 40))
             screen.blit(image, (player_x, player_y))
             slow_Since = None
+     
             velocity = [0,0]
                     
             if now >= tutorial_timer:
@@ -212,15 +233,13 @@ while running == True:
                 step = 4
         elif step == 4:
             slow_Since = None
-            text = font.render("RUNN! The game has started...",True,(0,0,0))
-            screen.blit(text, (400 - text.get_width() // 2, 40))
-            p_speed = 5
             show_tutorial = False
 
     if not show_tutorial:
+        time_survived += 1
         spawn_coin,score = update_coins(coin_image,now,player_rect,score,spawn_coin)
         draw_coins(coins, score)
-
+        survival_timer()
         if now >= spawn_projectile:
                 
             projectiles.append(projectile(p_y, p_x ,p_speed))
