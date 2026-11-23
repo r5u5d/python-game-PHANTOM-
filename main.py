@@ -6,6 +6,7 @@
 #give a death screen 
 #make game harder over time 
 #make a indicator warning on side on
+# it changes bg?
 count_down = 0
 
 print("hello, world")
