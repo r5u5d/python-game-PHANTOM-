@@ -1,8 +1,7 @@
 #game premise: a game where u dodge obsticles
-
 #THING TO FIX!!
-# finish the tutorial
-#add a obstacle that shoots pasts the screen and if u touch it u die
+
+
 print("hello, world")
 import pygame
 pygame.init()
@@ -17,6 +16,7 @@ image = pygame.image.load(f"kenney_shape-characters/PNG/Default/{different_block
 tutorial_steps = ["Press w,a,s,d or arrow keys to move move in the red box!", "oh ya! you cant go slow", "dodge the obstacles good luck!"]
 step = 1
 coin_image = pygame.image.load("kenney_shape-characters/PNG/Default/tile_coin.png")
+projectile_image = pygame.image.load("kenney_shape-characters/PNG/Default/red_body_circle.png")
 slow_Since = None
 Fast = None
 font = pygame.font.Font(None, 36)
@@ -25,11 +25,17 @@ player_y = 100
 velocity = [0,0]
 speed = 0.2
 goal_rect = pygame.Rect(600, 400, 60, 60)
-show_tutorial = False
+show_tutorial = True
 running = True
 score = 0
+p_speed = 2
+spawn_projectile = 0
+p_x = 100
+p_y = 100
+projectiles = []
 coins = []
 spawn_coin = 0
+tutorial_timer =0
 now = pygame.time.get_ticks()
 def movement(player_x, player_y, velocity):
     key = pygame.key.get_pressed()
@@ -120,7 +126,7 @@ def update_coins(coin_image,now,player_rect,score,spawn_coin):
         coin_x = random.randint(0,800- coin_image.get_width())
         coin_y = random.randint(0,600- coin_image.get_height())
         coins.append(coin_image.get_rect(topleft=(coin_x,coin_y)))
-        spawn_coin = now + random.randint(1000,2000)
+        spawn_coin = now + random.randint(3000,10000)
     for i in coins[:]:
         if player_rect.colliderect(i):
             coins.remove(i)
@@ -132,16 +138,20 @@ def draw_coins(coins, score):
         screen.blit(coin_image, c)
     screen.blit(font.render(f'you have{score} coins!',True,(0,0,0)),(200,100))   #lowk idk why i did this couldve just done score_text then blit that but whatever
 
-
 class projectile():
-    def __init__(self,x,y,speed):
+    def __init__(self,p_x,p_y,p_speed):
         self.image = pygame.image.load("kenney_shape-characters/PNG/Default/red_body_circle.png")
-        self.rect = self.image.get_rect(center=(x,y))
-        self.speed = speed
+        p_y = random.randint(0,600)
+        p_x = 0
+        self.rect = self.image.get_rect(center=(p_x,p_y))
+        self.speed = p_speed
     def update(self):
-        self.image.x += speed
+        self.rect.x += p_speed
     def draw(self):
         screen.blit(self.image,self.rect)
+    def collision(self,player_rect):
+        if self.rect.colliderect(player_rect):
+            pygame.quit()
    
 running = title_screen()
 while running == True:
@@ -156,8 +166,9 @@ while running == True:
     player_x , player_y, velocity = movement(player_x, player_y, velocity)     
     screen.blit(image, (player_x, player_y))
     total_velocity = abs(velocity[0]) + abs(velocity[1])
-   
-    if step != 1 or not show_tutorial :
+    
+
+    if step != 1 or not show_tutorial:
         game_over, slow_Since = check_velocity(slow_Since, total_velocity)
         if game_over == True:
             running = False
@@ -183,13 +194,41 @@ while running == True:
                 Fast = None
 
         elif step == 3:
-            text = font.render(tutorial_steps[step-1],True,(0,0,0))
+            if tutorial_timer == 0:
+                text = font.render(tutorial_steps[step-1],True,(0,0,0))
+                screen.blit(text, (400 - text.get_width() // 2, 40))
+                player_x = 400
+                player_y = 300
+                tutorial_timer = now + 3000
+            text = font.render("okay watch out better dodge!",True,(0,0,0))
             screen.blit(text, (400 - text.get_width() // 2, 40))
+            screen.blit(image, (player_x, player_y))
+            slow_Since = None
+            velocity = [0,0]
+                    
+            if now >= tutorial_timer:
+                projectiles.append(projectile(p_x,p_y,p_speed))
+                tutorial_timer = now + 1000
+                step = 4
+        elif step == 4:
+            slow_Since = None
+            text = font.render("RUNN! The game has started...",True,(0,0,0))
+            screen.blit(text, (400 - text.get_width() // 2, 40))
+            p_speed = 5
+            show_tutorial = False
 
     if not show_tutorial:
         spawn_coin,score = update_coins(coin_image,now,player_rect,score,spawn_coin)
         draw_coins(coins, score)
 
+        if now >= spawn_projectile:
+                
+            projectiles.append(projectile(p_y, p_x ,p_speed))
+            spawn_projectile = now + random.randint(1000,3000)
+    for i in projectiles:        
+        i.update()
+        i.draw()
+        i.collision(player_rect)
     pygame.display.flip()  
     clock.tick(60)
 pygame.quit()
