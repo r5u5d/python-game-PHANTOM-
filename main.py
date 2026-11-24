@@ -1,7 +1,6 @@
 #game premise: a game where u dodge obsticles
 #THING TO FIX!!#
 #make different attacks
-#make ball come from all sides
 #it changes bg?  
 #work on read me 
 # make it load on a browser
@@ -19,8 +18,8 @@ import random
 number = random.randint(0, 4)
 different_blocks = ["yellow_body_square.png", "blue_body_square.png", "green_body_square.png", "red_body_square.png", 
                     "purple_body_square.png"]
-face_number = random.randint(0,11)
-different_faces = ["a","b","c","d","e","f","g","h","i","j","k","l"]
+face_number = random.randint(0,10)
+different_faces = ["a","b","c","d","e","f","g","h","i","k","l"]
 faces = pygame.image.load(f"kenney_shape-characters/PNG/Default/face_{different_faces[face_number]}.png")
 image = pygame.image.load(f"kenney_shape-characters/PNG/Default/{different_blocks[number]}")
 tutorial_steps = ["Press w,a,s,d or arrow keys to move move in the red box!", "oh ya! you cant go slow, Stay fast for {} seconds", "dodge the obstacles good luck!"]
@@ -40,6 +39,8 @@ font = pygame.font.Font(None, 36)
 goal_rect = pygame.Rect(600, 400, 60, 60)
 projectiles = []
 coins = []
+slow_Since = None
+Fast = None
 
 
 now = pygame.time.get_ticks()
@@ -151,23 +152,41 @@ class projectile():
     def __init__(self,p_speed):
         self.image = pygame.image.load("kenney_shape-characters/PNG/Default/red_body_circle.png")
         p_speed = level_loader(time_survived)
-        
-        sides = ["right","left"]
-        side_number = random.randint(0,1)
+       
+        self.speed_x = 0
+        self.speed_y = 0
+        sides = ["right","left","top","down"]
+        side_number = random.randint(0,3)
         self.sides = sides[side_number]
         if self.sides == "right":
-            self.speed = -p_speed
+            self.speed_x = -p_speed
             self.rect = self.image.get_rect(center=(1000,random.randint(30,570)))
         elif self.sides == "left":
-            self.speed = p_speed
+            self.speed_x = p_speed
             self.rect = self.image.get_rect(center=(-200,random.randint(30,570)))
+        elif self.sides == "top":
+            self.speed_y = -p_speed
+            self.rect = self.image.get_rect(center=(random.randint(30,770),800))
+        elif self.sides == "down":
+            self.speed_y = p_speed
+            self.rect = self.image.get_rect(center=(random.randint(30,770),-200))
+
+
+
     def update(self):
         random_speed = random.randint(0,4)
-        if self.speed < 0:
-           self.rect.x += self.speed - random_speed
-        else:
-            self.rect.x += self.speed + random_speed
-        
+        if self.speed_x != 0:
+            if self.speed_x < 0:
+                self.rect.x += self.speed_x - random_speed
+            else:
+                self.rect.x += self.speed_x + random_speed
+     
+        if self.speed_y != 0:
+            if self.speed_y  <0:
+                self.rect.y += self.speed_y - random_speed
+            else:
+                self.rect.y +=self.speed_y + random_speed
+          
     def draw(self,warning_image):
        
         if self.rect.x >800 and self.sides == "right":
@@ -177,13 +196,21 @@ class projectile():
         elif self.rect.x <0 and self.sides == "left":
             warn_rect = warning_image.get_rect(center=(50,self.rect.centery))
             screen.blit(warning_image,warn_rect)
+        elif self.rect.y > 600 and self.sides == "top":
+            warn_rect = warning_image.get_rect(center=(self.rect.centerx,535))
+            flip_warning_image = pygame.transform.rotate(warning_image,90)  
+            screen.blit(flip_warning_image,warn_rect)
+        elif self.rect.y < 0 and self.sides == "down":
+            warn_rect = warning_image.get_rect(center=(self.rect.centerx,0))
+            flip_warning_image = pygame.transform.rotate(warning_image,270)  
+            screen.blit(flip_warning_image,warn_rect) 
         else:
             screen.blit(self.image,self.rect)
     def collision(self,player_rect,show_tutorial):
         if self.rect.colliderect(player_rect):
             show_tutorial = death_screen(show_tutorial)
     def off_screen(self):
-        if (self.sides == "right" and self.rect.x < -50 )or (self.sides == "left" and self.rect.x > 800):
+        if (self.sides == "right" and self.rect.x < -50 )or (self.sides == "left" and self.rect.x > 800) or (self.sides =="top" and self.rect.y < -50) or (self.sides == "down" and self.rect.y > 600):
             return True
         else:
             return False
@@ -195,9 +222,7 @@ def survival_timer():
 
     
 def reset_stuff():
-    global slow_Since, Fast,player_x,player_y,velocity,speed,show_tutorial,running,score,p_speed,spawn_projectile,p_x,p_y,spawn_coin,level,time_survived
-    slow_Since = None
-    Fast = None
+    global player_x,player_y,velocity,speed,show_tutorial,running,score,p_speed,spawn_projectile,p_x,p_y,spawn_coin,level,time_survived
     player_x = 400
     player_y = 300
     velocity = [0,0]
@@ -217,10 +242,42 @@ def reset_stuff():
 def level_loader(time_survived):
     return 3 + time_survived//300
  
+def death_animations(velocity,image,faces):
+    projectiles.clear()
+    coins.clear()
+    fall_speed = 18
+  
+    for i in range (160):
+        
+        screen.fill((135,206,235))
+        player_y = player_rect.y
+        spinning_sprite = pygame.transform.rotate(image,i *4)
+        spinning_face = pygame.transform.rotate(faces,i*4)  
+        
+        if i >= 28 and i < 100:
+            fall_speed = 0
+            faces = pygame.image.load(f"kenney_shape-characters/PNG/Default/face_j.png")
+            spinning_sprite = pygame.transform.rotate(image, i*3)
+            spinning_face = pygame.transform.rotate(faces,i*3)  
+        if i == 34:
+            fall_speed = -2
+        screen.blit(spinning_sprite,player_rect)
+        screen.blit(spinning_face, (player_x+13, player_y+20))
+        fall_speed -= 0.9
+        player_y -= fall_speed
+        player_rect.y -= fall_speed
+
+
+        pygame.display.flip()
+        clock.tick(60)
+       
+        
+        
 
 def death_screen(show_tutorial):
     run = True
     death_sound.play()
+    death_animations(velocity,image,faces)
     while run == True:
         screen.fill((0,0,0))
         font = pygame.font.Font("PressStart2P-Regular.ttf",54) 
@@ -322,7 +379,7 @@ while running == True:
 
     if not show_tutorial:
         time_survived += 1
-
+       
         spawn_coin,score = update_coins(coin_image,now,player_rect,score,spawn_coin)
         draw_coins(coins, score)
         survival_timer()
