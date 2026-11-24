@@ -1,13 +1,15 @@
 #game premise: a game where u dodge obsticles
 #THING TO FIX!!#
-#make game harder over time 
-#make a indicator warning on side on
+#make different attacks
+#make ball come from all sides
 #it changes bg?  
 #work on read me and itch.io
-#make game quit propely
+
 count_down = 0
 print("hello, world")
+import sys
 import pygame
+from pygame.transform import flip
 pygame.init()
 screen = pygame.display.set_mode((800, 600))
 pygame.display.set_caption("My Game")
@@ -32,26 +34,12 @@ pygame.mixer.music.play(-1)
 death_sound = pygame.mixer.Sound("lesiakower-8-bit-game-over-sound-effect-331435.mp3")
 game_start_sound = pygame.mixer.Sound("freesound_community-game-start-6104.mp3")
 tutorial_timer =0
+warning_image = pygame.image.load("Arrow 0.png")
 font = pygame.font.Font(None, 36)
 goal_rect = pygame.Rect(600, 400, 60, 60)
-slow_Since = None
-Fast = None
-player_x = 100
-player_y = 100
-velocity = [0,0]
-speed = 0.2
-show_tutorial = True
-running = True
-score = 0
-p_speed = 5
-spawn_projectile = 0
-p_x = 100
-p_y = 100
 projectiles = []
 coins = []
-spawn_coin = 0
-time_survived = 0
-level = 1
+
 
 now = pygame.time.get_ticks()
 def movement(player_x, player_y, velocity):
@@ -135,6 +123,12 @@ def check_velocity(slow_Since, total_velocity):
         slow_Since = None
     return False, slow_Since  
 
+def survival_timer():
+    text = font.render(f"You have survived for {time_survived//60} seconds", True, (0, 0, 0))
+    screen.blit(text, (400 - text.get_width() // 2, 500))
+
+    
+
 
 def update_coins(coin_image,now,player_rect,score,spawn_coin):
     if now >= spawn_coin:
@@ -156,24 +150,52 @@ def draw_coins(coins, score):
     screen.blit(font.render(f'you have {score}x         coins!',True,(0,0,0)),(650,530))   #lowk idk why i did this couldve just done score_text then blit that but whatever
 
 class projectile():
-    def __init__(self,p_x,p_y,p_speed):
+    def __init__(self,p_speed):
         self.image = pygame.image.load("kenney_shape-characters/PNG/Default/red_body_circle.png")
-        p_y = random.randint(0,600)
-        p_x = 0
-        self.rect = self.image.get_rect(center=(p_x,p_y))
-        self.speed = p_speed 
+        p_speed = level_loader(time_survived)
+        
+        sides = ["right","left"]
+        side_number = random.randint(0,1)
+        self.sides = sides[side_number]
+        if self.sides == "right":
+            self.speed = -p_speed
+            self.rect = self.image.get_rect(center=(1000,random.randint(30,570)))
+        elif self.sides == "left":
+            self.speed = p_speed
+            self.rect = self.image.get_rect(center=(-200,random.randint(30,570)))
     def update(self):
-        self.rect.x += p_speed + random.randint(0,4)
-    def draw(self):
-        screen.blit(self.image,self.rect)
+        random_speed = random.randint(0,4)
+        if self.speed < 0:
+           self.rect.x += self.speed - random_speed
+        else:
+            self.rect.x += self.speed + random_speed
+        
+    def draw(self,warning_image):
+       
+        if self.rect.x >800 and self.sides == "right":
+            warn_rect = warning_image.get_rect(center=(750,self.rect.centery))
+            flip_warning_image = flip(warning_image,True,False)
+            screen.blit(flip_warning_image,warn_rect)
+        elif self.rect.x <0 and self.sides == "left":
+            warn_rect = warning_image.get_rect(center=(50,self.rect.centery))
+            screen.blit(warning_image,warn_rect)
+        else:
+            screen.blit(self.image,self.rect)
     def collision(self,player_rect,show_tutorial):
         if self.rect.colliderect(player_rect):
             show_tutorial = death_screen(show_tutorial)
+    def off_screen(self):
+        if (self.sides == "right" and self.rect.x < -50 )or (self.sides == "left" and self.rect.x > 800):
+            return True
+        else:
+            return False
+
+
 def survival_timer():
     text = font.render(f"You have survived for {time_survived//60} seconds", True, (0, 0, 0))
     screen.blit(text, (400 - text.get_width() // 2, 500))
-def level_loader(level):
-    pass
+
+    
 def reset_stuff():
     global slow_Since, Fast,player_x,player_y,velocity,speed,show_tutorial,running,score,p_speed,spawn_projectile,p_x,p_y,spawn_coin,level,time_survived
     slow_Since = None
@@ -194,6 +216,9 @@ def reset_stuff():
     level = 1
     projectiles.clear()
     coins.clear()
+def level_loader(time_survived):
+    return 3 + time_survived//300
+ 
 
 def death_screen(show_tutorial):
     run = True
@@ -215,18 +240,21 @@ def death_screen(show_tutorial):
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 pygame.quit()
+                sys.exit()
+
             elif event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_ESCAPE:
                     pygame.quit()
-                    run = False
+                    sys.exit()
+              
                 elif event.key == pygame.K_SPACE:
                     show_tutorial = False
                     reset_stuff()
                     run = False
 
         pygame.display.flip()
-    
-    
+
+reset_stuff()
 running = title_screen()
 while running == True:
     
@@ -287,7 +315,7 @@ while running == True:
             velocity = [0,0]
                     
             if now >= tutorial_timer:
-                projectiles.append(projectile(p_x,p_y,p_speed))
+                projectiles.append(projectile(p_speed))
                 tutorial_timer = now + 1000
                 step = 4
         elif step == 4:
@@ -296,17 +324,24 @@ while running == True:
 
     if not show_tutorial:
         time_survived += 1
+
         spawn_coin,score = update_coins(coin_image,now,player_rect,score,spawn_coin)
         draw_coins(coins, score)
         survival_timer()
-        if now >= spawn_projectile:
-                
-            projectiles.append(projectile(p_y, p_x ,p_speed))
+        if now >= spawn_projectile: 
+            projectiles.append(projectile(p_speed))
             spawn_projectile = now + random.randint(1000,3000)
     for i in projectiles:        
         i.update()
-        i.draw()
+        i.draw(warning_image)
         i.collision(player_rect,show_tutorial)
+        if i.off_screen():
+            projectiles.remove(i)
+
+
+        
+
+
     pygame.display.flip()  
     clock.tick(60)
 pygame.quit()
