@@ -1,16 +1,11 @@
 #game premise: a game where u dodge obsticles
 #THING TO FIX!!#
-#music for title screen and game start sound effects
-#better title screen
-#make faces on blocks
-#give a death screen 
 #make game harder over time 
 #make a indicator warning on side on
-# it changes bg?  
+#it changes bg?  
 #work on read me and itch.io
 #make game quit propely
 count_down = 0
-
 print("hello, world")
 import pygame
 pygame.init()
@@ -21,6 +16,9 @@ import random
 number = random.randint(0, 4)
 different_blocks = ["yellow_body_square.png", "blue_body_square.png", "green_body_square.png", "red_body_square.png", 
                     "purple_body_square.png"]
+face_number = random.randint(0,11)
+different_faces = ["a","b","c","d","e","f","g","h","i","j","k","l"]
+faces = pygame.image.load(f"kenney_shape-characters/PNG/Default/face_{different_faces[face_number]}.png")
 image = pygame.image.load(f"kenney_shape-characters/PNG/Default/{different_blocks[number]}")
 tutorial_steps = ["Press w,a,s,d or arrow keys to move move in the red box!", "oh ya! you cant go slow, Stay fast for {} seconds", "dodge the obstacles good luck!"]
 step = 1
@@ -28,9 +26,11 @@ coin_image = pygame.image.load("kenney_shape-characters/PNG/Default/tile_coin.pn
 countdown_sound = pygame.mixer.Sound("lesiakower-countdown-sound-effect-8-bit-151797.mp3")
 projectile_image = pygame.image.load("kenney_shape-characters/PNG/Default/red_body_circle.png")
 coin_pickup_sound = pygame.mixer.Sound("coin.wav")
-bg_sound = pygame.mixer.Sound("freesound_community-8-bit-heaven-26287.mp3")
-bg_sound.play(-1)
+pygame.mixer.music.load("freesound_community-8-bit-heaven-26287.mp3")
+pygame.mixer.music.set_volume(0.4)
+pygame.mixer.music.play(-1)
 death_sound = pygame.mixer.Sound("lesiakower-8-bit-game-over-sound-effect-331435.mp3")
+game_start_sound = pygame.mixer.Sound("freesound_community-game-start-6104.mp3")
 tutorial_timer =0
 font = pygame.font.Font(None, 36)
 goal_rect = pygame.Rect(600, 400, 60, 60)
@@ -40,7 +40,7 @@ player_x = 100
 player_y = 100
 velocity = [0,0]
 speed = 0.2
-show_tutorial = False
+show_tutorial = True
 running = True
 score = 0
 p_speed = 5
@@ -83,6 +83,9 @@ def movement(player_x, player_y, velocity):
 def title_screen():
     global running
     running = True
+    start_button = pygame.image.load("start_button.JPEG")
+    
+    start_rect = start_button.get_rect(center=(400,450))
     while running == True:
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
@@ -92,17 +95,31 @@ def title_screen():
                 if event.key == pygame.K_ESCAPE:
                     running = False
                     return running
-                elif event.key == pygame.K_RETURN:
-                    running = True
-                    return running
                 elif event.key == pygame.K_KP_ENTER:
                     running = True
+                    game_start_sound.play()
                     return running
+                elif event.key == pygame.K_RETURN:
+                    running = True
+                    game_start_sound.play()
+                    return running
+            elif event.type == pygame.MOUSEBUTTONDOWN:
+                if start_rect.collidepoint(mouse_pos):
+                    running = True
+                    game_start_sound.play()
+                    return running
+            
         screen.fill((135, 206, 235))
-        text = font.render("Press Enter to Start", True, (0, 0, 0))
+        font = pygame.font.Font("PressStart2P-Regular.ttf", 17)
+        text = font.render("Press Enter or click to start!", True, (0, 0, 0))
         screen.blit(text, (400 - text.get_width() // 2, 300 - text.get_height() // 2))
+        font = pygame.font.Font("PressStart2P-Regular.ttf", 67)
+        text = font.render("DODGE BALLS", True, (0, 0, 0))
+        screen.blit(text, (400 - text.get_width() // 2, 100 - text.get_height() // 2))
+        mouse_pos = pygame.mouse.get_pos()
+        screen.blit(start_button,start_rect)
+        font = pygame.font.Font(None, 36)
         pygame.display.flip()
-
 
 def check_velocity(slow_Since, total_velocity):
     now = pygame.time.get_ticks()               
@@ -223,6 +240,7 @@ while running == True:
     screen.fill((135, 206, 235))                                          # order was wrong it has to be fill blit then everything else in then flip thentick 
     player_x , player_y, velocity = movement(player_x, player_y, velocity)     
     screen.blit(image, (player_x, player_y))
+    screen.blit(faces, (player_x+15, player_y+15))
     total_velocity = abs(velocity[0]) + abs(velocity[1])
     
 
@@ -263,6 +281,7 @@ while running == True:
             text = font.render("okay watch out better dodge! the game is starting!",True,(0,0,0))
             screen.blit(text, (400 - text.get_width() // 2, 40))
             screen.blit(image, (player_x, player_y))
+            screen.blit(faces, (player_x+15, player_y+15))
             slow_Since = None
      
             velocity = [0,0]
