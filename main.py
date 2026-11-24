@@ -6,7 +6,9 @@
 #give a death screen 
 #make game harder over time 
 #make a indicator warning on side on
-# it changes bg?
+# it changes bg?  
+#work on read me and itch.io
+#make game quit propely
 count_down = 0
 
 print("hello, world")
@@ -28,15 +30,17 @@ projectile_image = pygame.image.load("kenney_shape-characters/PNG/Default/red_bo
 coin_pickup_sound = pygame.mixer.Sound("coin.wav")
 bg_sound = pygame.mixer.Sound("freesound_community-8-bit-heaven-26287.mp3")
 bg_sound.play(-1)
+death_sound = pygame.mixer.Sound("lesiakower-8-bit-game-over-sound-effect-331435.mp3")
+tutorial_timer =0
+font = pygame.font.Font(None, 36)
+goal_rect = pygame.Rect(600, 400, 60, 60)
 slow_Since = None
 Fast = None
-font = pygame.font.Font(None, 36)
 player_x = 100
 player_y = 100
 velocity = [0,0]
 speed = 0.2
-goal_rect = pygame.Rect(600, 400, 60, 60)
-show_tutorial = True
+show_tutorial = False
 running = True
 score = 0
 p_speed = 5
@@ -46,8 +50,8 @@ p_y = 100
 projectiles = []
 coins = []
 spawn_coin = 0
-tutorial_timer =0
 time_survived = 0
+level = 1
 
 now = pygame.time.get_ticks()
 def movement(player_x, player_y, velocity):
@@ -100,25 +104,6 @@ def title_screen():
         pygame.display.flip()
 
 
-def draw_tutorial():
-    show_tutorial = True
-    while show_tutorial == True:
-        for event in pygame.event.get():
-            if event.type == pygame.QUIT:
-                pygame.quit()
-            elif event.type == pygame.KEYDOWN:
-                if event.key == pygame.K_ESCAPE:
-                    pygame.quit()
-                elif event.key == pygame.K_RETURN:
-                    pygame.quit()
-                elif event.key == pygame.K_KP_ENTER:
-                    pygame.quit()
-        screen.fill((135, 206, 235))
-        text = font.render("Press w,a,s,d or arrow keys to move", True, (0, 0, 0))
-        screen.blit(text, (400 - text.get_width() // 2, 300 - text.get_height() // 2))
-        pygame.display.flip()
-
-
 def check_velocity(slow_Since, total_velocity):
     now = pygame.time.get_ticks()               
     if total_velocity < 15:
@@ -164,12 +149,66 @@ class projectile():
         self.rect.x += p_speed + random.randint(0,4)
     def draw(self):
         screen.blit(self.image,self.rect)
-    def collision(self,player_rect):
+    def collision(self,player_rect,show_tutorial):
         if self.rect.colliderect(player_rect):
-            pygame.quit()
+            show_tutorial = death_screen(show_tutorial)
 def survival_timer():
     text = font.render(f"You have survived for {time_survived//60} seconds", True, (0, 0, 0))
     screen.blit(text, (400 - text.get_width() // 2, 500))
+def level_loader(level):
+    pass
+def reset_stuff():
+    global slow_Since, Fast,player_x,player_y,velocity,speed,show_tutorial,running,score,p_speed,spawn_projectile,p_x,p_y,spawn_coin,level,time_survived
+    slow_Since = None
+    Fast = None
+    player_x = 400
+    player_y = 300
+    velocity = [0,0]
+    speed = 0.2
+    show_tutorial = False
+    running = True
+    score = 0
+    p_speed = 5
+    spawn_projectile = 0
+    p_x = 400
+    p_y = 350
+    spawn_coin = 0
+    time_survived = 0
+    level = 1
+    projectiles.clear()
+    coins.clear()
+
+def death_screen(show_tutorial):
+    run = True
+    death_sound.play()
+    while run == True:
+        screen.fill((0,0,0))
+        font = pygame.font.Font("PressStart2P-Regular.ttf",54) 
+        text = font.render(f"YOU DIED", True, (255,0,0))
+        screen.blit(text, (400 - text.get_width() // 2, 100))
+
+        font = pygame.font.Font(None, 30)
+        text = font.render("would u like to try again? Press space to" 
+        " try again press esc to quit...",True, (255,255,255))
+        screen.blit(text, (400 - text.get_width() // 2, 300))
+
+        font = pygame.font.Font(None, 36)
+        text = font.render(f"You have survived for {time_survived//60} seconds", True, (255,255,255))
+        screen.blit(text, (400 - text.get_width() // 2, 500))
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit()
+            elif event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_ESCAPE:
+                    pygame.quit()
+                    run = False
+                elif event.key == pygame.K_SPACE:
+                    show_tutorial = False
+                    reset_stuff()
+                    run = False
+
+        pygame.display.flip()
+    
     
 running = title_screen()
 while running == True:
@@ -248,7 +287,7 @@ while running == True:
     for i in projectiles:        
         i.update()
         i.draw()
-        i.collision(player_rect)
+        i.collision(player_rect,show_tutorial)
     pygame.display.flip()  
     clock.tick(60)
 pygame.quit()
