@@ -3,7 +3,8 @@
 #make different attacks
 #make ball come from all sides
 #it changes bg?  
-#work on read me and itch.io
+#work on read me 
+# make it load on a browser
 
 count_down = 0
 print("hello, world")
@@ -126,9 +127,6 @@ def check_velocity(slow_Since, total_velocity):
 def survival_timer():
     text = font.render(f"You have survived for {time_survived//60} seconds", True, (0, 0, 0))
     screen.blit(text, (400 - text.get_width() // 2, 500))
-
-    
-
 
 def update_coins(coin_image,now,player_rect,score,spawn_coin):
     if now >= spawn_coin:
@@ -337,10 +335,6 @@ while running == True:
         i.collision(player_rect,show_tutorial)
         if i.off_screen():
             projectiles.remove(i)
-
-
-        
-
 
     pygame.display.flip()  
     clock.tick(60)
