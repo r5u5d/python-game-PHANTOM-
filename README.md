@@ -24,23 +24,43 @@ w,a,s,d or arrow keys to move --> dont stop moving --> dodge balls --> collect c
 ## OR 
 just follow the tutorial that took me 2 hours to make! :)
 
+---
 
 ## well cool features you may ask
-- erm nothing.. much sorry 
-- maybe the sound effects?...
+- maybe the sound effects
 - different block faces and colors
-- new death animations pretty cool! try it!
+- death animations is pretty cool! try it!
 - built with pygame and python
+
+---
+
+## mechancics of the game (other than dodging balls)
+- cool bomb that explods in 4 different direction
+- speed detection u have to go above a certain speed!
+
+---
+
+## What i have learnt throughout this
+- learning how to start a simple pygame game without having to follow a 6 hour tutorial
+- enforcing my basic syntax
+- how coding is actually not that boring!
+- leanred how to bug fix a lot like and deal with frustrations of not knowing where errors came from etc.
+
+---
 
 ## needed dependecies
 - pygame how to download this?
 pip install pygame
 - if double clicking the main.py file doesnt work from itch.io or github, rember to extract it first!
 
+---
+
 ## USE OF AI? 
 - well yes i gotta admit
 - used it when i got stuck on why it was crashing or after a long time of my effort.
 - after that i will take a peek and try and recreate it (if i really really cant then ill try and understand it then copy it in)
 
-credits to https://kenney.nl/assets/shape-characters for the assets
+---
+# credits
+- https://kenney.nl/assets/shape-characters for the assets
 
